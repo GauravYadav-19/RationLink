@@ -1,31 +1,24 @@
 import pandas as pd
 import random
 
-def generate_dataset(n=200):
+def generate_dataset(n=100):
     data = []
     for i in range(n):
-        BeneficiaryID = f"B{1000+i}"
-        FamilySize = random.randint(1, 8)
+        FamilySize = random.randint(1, 6)
         MonthlyLimit = FamilySize * 5
-        Date = pd.date_range("2025-09-01", "2025-09-30").to_series().sample().iloc[0].date()
-        ShopID = f"S{random.randint(1, 10)}"
-        fraud = random.choices([0, 1], weights=[85, 15])[0]
-        if fraud == 0:
-            Claimed = random.randint(int(MonthlyLimit*0.7), MonthlyLimit)
-        else:
-            Claimed = random.randint(MonthlyLimit+1, MonthlyLimit+10)
-        data.append([BeneficiaryID, FamilySize, MonthlyLimit, Claimed, Date, ShopID, fraud])
-    
-    df = pd.DataFrame(data, columns=["BeneficiaryID","FamilySize","MonthlyLimit","Claimed","Date","ShopID","FraudFlag"])
-    df.to_csv("../dataset/ration_dummy_dataset.csv", index=False)
-    return df
+        Claimed = random.randint(1, MonthlyLimit + 3)
+        fraud = 1 if Claimed > MonthlyLimit else 0
+        data.append({
+            "BeneficiaryID": f"B{i+1}",
+            "FamilySize": FamilySize,
+            "MonthlyLimit": MonthlyLimit,
+            "Claimed": Claimed,
+            "Date": "2025-09-11",
+            "ShopID": f"S{random.randint(1, 5)}",
+            "FraudFlag": fraud,
+        })
+    return pd.DataFrame(data)
 
 def detect_fraud(df):
-    df['DetectedFraud'] = df.apply(lambda row: 1 if row['Claimed'] > row['MonthlyLimit'] else 0, axis=1)
+    df["DetectedFraud"] = (df["Claimed"] > df["MonthlyLimit"]).astype(int)
     return df
-
-# For testing locally
-if __name__ == "__main__":
-    df = generate_dataset()
-    df = detect_fraud(df)
-    print(df.head())
